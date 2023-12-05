@@ -73,29 +73,29 @@ func getTotalPointsOfWinningNumbersDrawn(cards []Card) int {
 	totalPoints := 0
 
 	for _, card := range cards {
-		numberOfWinningCardsDrawn := getNumberOfWinningNumbersDrawn(card)
-		pointsOfCard := transformNumberOfWinningNumbersDrawnToIn(numberOfWinningCardsDrawn)
-		totalPoints += pointsOfCard
+		winningCardsDrawn := getWinningCardsDrawn(card)
+		numberOfWinningCardsDrawn := len(winningCardsDrawn)
+		winningNumbersDrawn := transformNumberOfWinningNumbersDrawnToIn(numberOfWinningCardsDrawn)
+		totalPoints += winningNumbersDrawn
 	}
 
 	return totalPoints
 }
 
-func getNumberOfWinningNumbersDrawn(card Card) int {
-	numberOfWinningCardsDrawn := 0
+func getWinningCardsDrawn(card Card) []int {
+	var winningNumbers []int
 
 	for _, winningNumber := range card.winningNumbers {
 		for _, drawnNumber := range card.drawnNumbers {
 			isNumberDrawn := winningNumber == drawnNumber
 			if isNumberDrawn {
-				numberOfWinningCardsDrawn += 1
-				break
+				winningNumbers = append(winningNumbers, winningNumber)
 			}
 
 		}
 	}
 
-	return numberOfWinningCardsDrawn
+	return winningNumbers
 }
 
 func transformNumberOfWinningNumbersDrawnToIn(numberOfWinningCardsDrawn int) int {
