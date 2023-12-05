@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"regexp"
+	"slices"
 	"strconv"
 )
 
@@ -17,6 +18,8 @@ func main() {
 	cards := getCardsOfInput(input)
 	totalPoints := getTotalPointsOfWinningNumbersDrawn(cards)
 	fmt.Printf("totalPoints: %v\n", totalPoints)
+	numberOfScratchCardsWon := getNumberOfTotalScratchCardsWon(cards, cards)
+	fmt.Printf("numberOfScratchCardsWon: %v\n", numberOfScratchCardsWon)
 }
 
 func getCardsOfInput(input []string) []Card {
@@ -73,7 +76,7 @@ func getTotalPointsOfWinningNumbersDrawn(cards []Card) int {
 	totalPoints := 0
 
 	for _, card := range cards {
-		winningCardsDrawn := getWinningCardsDrawn(card)
+		winningCardsDrawn := getIdsOfWinningCardsDrawn(card)
 		numberOfWinningCardsDrawn := len(winningCardsDrawn)
 		winningNumbersDrawn := transformNumberOfWinningNumbersDrawnToIn(numberOfWinningCardsDrawn)
 		totalPoints += winningNumbersDrawn
@@ -82,7 +85,29 @@ func getTotalPointsOfWinningNumbersDrawn(cards []Card) int {
 	return totalPoints
 }
 
-func getWinningCardsDrawn(card Card) []int {
+func getNumberOfTotalScratchCardsWon(cards []Card, initialCards []Card) int {
+	numberOfScratchCardsWon := 0
+
+	for _, card := range cards {
+		numberOfScratchCardsWon += 1 // the current card will be added to the total number of scratch cards won
+
+		idsOfWinningCardsDrawn := getIdsOfWinningCardsDrawn(card)
+		numberOfWinningCardsDrawn := len(idsOfWinningCardsDrawn)
+		if numberOfWinningCardsDrawn == 0 {
+			continue
+		}
+
+		idsOfReceivedCards := getIdsOfNextCards(card.id, numberOfWinningCardsDrawn)
+		winningCardsDrawn := getCardsById(idsOfReceivedCards, initialCards)
+		totalNumberOfScratches := getNumberOfTotalScratchCardsWon(winningCardsDrawn, initialCards)
+		numberOfScratchCardsWon += totalNumberOfScratches
+
+	}
+
+	return numberOfScratchCardsWon
+}
+
+func getIdsOfWinningCardsDrawn(card Card) []int {
 	var winningNumbers []int
 
 	for _, winningNumber := range card.winningNumbers {
@@ -111,4 +136,28 @@ func transformNumberOfWinningNumbersDrawnToIn(numberOfWinningCardsDrawn int) int
 	}
 
 	return sum
+}
+
+func getCardsById(cardIds []int, cards []Card) []Card {
+	drawnCards := make([]Card, len(cardIds))
+
+	for i, cardId := range cardIds {
+		indexOfCard := slices.IndexFunc[[]Card](cards, func(card Card) bool { return card.id == cardId })
+		if indexOfCard == -1 {
+			continue
+		}
+
+		drawnCards[i] = cards[indexOfCard]
+	}
+
+	return drawnCards
+}
+
+func getIdsOfNextCards(initialCardId int, numberOfCards int) []int {
+	result := make([]int, numberOfCards)
+	for i := range result {
+		result[i] = initialCardId + i + 1
+	}
+
+	return result
 }
