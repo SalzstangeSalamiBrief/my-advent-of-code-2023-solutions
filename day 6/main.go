@@ -5,11 +5,13 @@ import (
 	"log"
 	"regexp"
 	"strconv"
+	"strings"
 )
 
 func main() {
 	input := getInput("puzzleInput.txt")
-	partOne(input)
+	// partOne(input)
+	partTwo(input)
 }
 
 func partOne(input []string) {
@@ -23,7 +25,6 @@ func partOne(input []string) {
 	if len(timesInMs) != len(distancesInMm) {
 		log.Fatal("Times and distances should have the same length")
 	}
-
 	allPossibleSolution := getAllPossibleSolutions(timesInMs, distancesInMm)
 	fmt.Printf("Possible solutions: %v\n", allPossibleSolution)
 	marginOfError := getMarginOfError(allPossibleSolution)
@@ -85,8 +86,47 @@ func getMarginOfError(possibleSolutions [][]int) int {
 
 	for _, possibleSolution := range possibleSolutions {
 		numberOfSolutions := len(possibleSolution)
-		fmt.Printf("Number of solutions: %v\n", numberOfSolutions)
 		product *= numberOfSolutions
 	}
 	return product
+}
+
+func partTwo(input []string) {
+	if len(input) != 2 {
+		log.Fatal("Input should have 2 lines")
+	}
+
+	timesInMsAsString := input[0]
+	timeInMs := concatPartialNumbersAndConvertToNumber(timesInMsAsString)
+	timesInMs := []int{timeInMs}
+	distancesInMmAsString := input[1]
+	distanceInMs := concatPartialNumbersAndConvertToNumber(distancesInMmAsString)
+	distancesInMm := []int{distanceInMs}
+	allPossibleSolution := getAllPossibleSolutions(timesInMs, distancesInMm)
+	totalNumberOfWaysToWin := getNumberOfTotalWaysToWinTheRace(allPossibleSolution)
+	fmt.Printf("totalNumberOfWaysToWin: %v\n", totalNumberOfWaysToWin)
+}
+
+func concatPartialNumbersAndConvertToNumber(line string) int {
+	regexForNumbers := regexp.MustCompile(`\d+`)
+	partialNumbersAsString := regexForNumbers.FindAllString(line, -1)
+	numberAsString := strings.Join(partialNumbersAsString, "")
+
+	number, err := strconv.Atoi(numberAsString)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return number
+}
+
+func getNumberOfTotalWaysToWinTheRace(possibleSolutions [][]int) int {
+	result := 0
+
+	for _, possibleSolution := range possibleSolutions {
+		numberOfSolutions := len(possibleSolution)
+		result += numberOfSolutions
+	}
+
+	return result
 }
