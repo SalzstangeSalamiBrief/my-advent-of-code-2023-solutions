@@ -1,0 +1,92 @@
+package main
+
+import (
+	"fmt"
+	"log"
+	"regexp"
+	"strconv"
+)
+
+func main() {
+	input := getInput("puzzleInput.txt")
+	partOne(input)
+}
+
+func partOne(input []string) {
+	if len(input) != 2 {
+		log.Fatal("Input should have 2 lines")
+	}
+
+	timesInMs := getNumbersOfLine(input[0])
+	distancesInMm := getNumbersOfLine(input[1])
+
+	if len(timesInMs) != len(distancesInMm) {
+		log.Fatal("Times and distances should have the same length")
+	}
+
+	allPossibleSolution := getAllPossibleSolutions(timesInMs, distancesInMm)
+	fmt.Printf("Possible solutions: %v\n", allPossibleSolution)
+	marginOfError := getMarginOfError(allPossibleSolution)
+	fmt.Printf("Margin of error: %v\n", marginOfError)
+}
+
+func getAllPossibleSolutions(timesInMs []int, distancesInMm []int) [][]int {
+	allPossibleSolution := make([][]int, len(timesInMs))
+
+	for i, timeInMs := range timesInMs {
+		distanceInMn := distancesInMm[i]
+		possibleSolution := getPossibleSolutionsToReachTheGoalOfRace(timeInMs, distanceInMn)
+		allPossibleSolution[i] = possibleSolution
+	}
+
+	return allPossibleSolution
+}
+
+func getNumbersOfLine(line string) []int {
+	regexForNumbers := regexp.MustCompile(`\d+`)
+	numbersAsString := regexForNumbers.FindAllString(line, -1)
+	numbers := make([]int, len(numbersAsString))
+	for i, numberAsString := range numbersAsString {
+		number, err := strconv.Atoi(numberAsString)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		numbers[i] = number
+	}
+
+	return numbers
+}
+
+func getPossibleSolutionsToReachTheGoalOfRace(timeInMs int, distanceInMm int) []int {
+	possibleSolutionsToReachTheGoal := make([]int, 0)
+
+	// start at 1 because with zero the boat could not move a single millimeter
+	// end at timeInMs - 1 because with a time equal to timeInMs the boat would start moving at the same time the race finishes
+	for msToPressTheButton := 1; msToPressTheButton < timeInMs-1; msToPressTheButton += 1 {
+		speedOfBoatInMs := msToPressTheButton * 1
+		remainingTimeToTravelInMs := timeInMs - msToPressTheButton
+		exceptedDistanceToTravelInMm := remainingTimeToTravelInMs * speedOfBoatInMs
+
+		if exceptedDistanceToTravelInMm > distanceInMm {
+			possibleSolutionsToReachTheGoal = append(possibleSolutionsToReachTheGoal, msToPressTheButton)
+		}
+	}
+
+	return possibleSolutionsToReachTheGoal
+}
+
+func getMarginOfError(possibleSolutions [][]int) int {
+	if len(possibleSolutions) == 0 {
+		return 0
+	}
+
+	product := 1 // start by one for the first iteration to prevent a zero value as product
+
+	for _, possibleSolution := range possibleSolutions {
+		numberOfSolutions := len(possibleSolution)
+		fmt.Printf("Number of solutions: %v\n", numberOfSolutions)
+		product *= numberOfSolutions
+	}
+	return product
+}
