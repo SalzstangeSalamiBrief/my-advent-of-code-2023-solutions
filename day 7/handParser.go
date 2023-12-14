@@ -14,12 +14,10 @@ type Hand struct {
 }
 
 // part 1 (usesJoker = true)
-//var possibleCards = []string{"A", "K", "Q", "J", "T", "9", "8", "7", "6", "5", "4", "3", "2"}
-
-var usesJoker = false
+var possibleCardsWithJoker = []string{"2", "3", "4", "5", "6", "7", "8", "9", "T", "J", "Q", "K", "A"}
 
 // part 2 (usesJoker = false)
-var possibleCards = []string{"A", "K", "Q", "T", "9", "8", "7", "6", "5", "4", "3", "2", "J"}
+var possibleCardsWithoutJoker = []string{"J", "2", "3", "4", "5", "6", "7", "8", "9", "T", "Q", "K", "A"}
 
 func getHandsGroupedByType(input []string) [][]Hand {
 	hands := getDefaultHandGroups()
@@ -27,13 +25,13 @@ func getHandsGroupedByType(input []string) [][]Hand {
 		splitLine := strings.Split(line, " ")
 		inputHand, bid := splitLine[0], splitLine[1]
 		cards := getCards(inputHand)
-		typeOfHand := getTypeOfHand(cards)
 		cardsAsStrength := getCardsAsStrength(cards)
+		typeOfHand := getTypeOfHandWithJoker(cardsAsStrength)
+		bidNumber := getBidStringAsNumber(bid)
 
-		//index := len(hands) - int(typeOfHand)
 		hand := Hand{
 			cardsAsStrength: cardsAsStrength,
-			bid:             getBidStringAsNumber(bid),
+			bid:             bidNumber,
 			rank:            0,
 		}
 
@@ -62,6 +60,11 @@ func getCards(hand string) [5]string {
 }
 
 func getCardsAsStrength(cards [5]string) [5]int {
+	possibleCards := possibleCardsWithJoker
+	if shouldUseDefaultJoker == false {
+		possibleCards = possibleCardsWithoutJoker
+	}
+
 	cardsAsStrength := [5]int{}
 
 	for i, card := range cards {
@@ -84,102 +87,68 @@ func getBidStringAsNumber(bid string) int {
 	return number
 }
 
-func getTypeOfHand(cards [5]string) TypeOfHandEnum {
-	groupedCards := make(map[string]int)
-
-	for _, card := range cards {
-		_, ok := groupedCards[card]
-		if ok == false {
-			groupedCards[card] = 0
+func getTypeOfHandWithJoker(cards [5]int) TypeOfHandEnum {
+	numberOfJokers := 0
+	if shouldUseDefaultJoker == false {
+		for _, card := range cards {
+			if card == 0 {
+				numberOfJokers += 1
+			}
 		}
-
-		groupedCards[card] += 1
 	}
 
-	if checkForFiveOfAKind(groupedCards) {
+	numberOfEachCard := [13]int{}
+	for _, card := range cards {
+		numberOfEachCard[card] += 1
+	}
+
+	for i, _ := range numberOfEachCard {
+		if shouldUseDefaultJoker == false && i == 0 {
+			continue
+		}
+
+		numberOfEachCard[i] = numberOfEachCard[i] + numberOfJokers
+	}
+
+	numberOfFiveOfAKind := getNumberOfEachCard(numberOfEachCard, 5)
+	numberOfFOurOfAKind := getNumberOfEachCard(numberOfEachCard, 4)
+	numberOfTripples := getNumberOfEachCard(numberOfEachCard, 3)
+	numberOfPairs := getNumberOfEachCard(numberOfEachCard, 2)
+
+	if numberOfFiveOfAKind >= 1 {
 		return FiveOfAKind
 	}
 
-	if checkForFourOfAKind(groupedCards) {
+	if numberOfFOurOfAKind >= 1 {
 		return FourOfAKind
 	}
 
-	if checkForFullHouse(groupedCards) {
+	if numberOfTripples >= 1 && numberOfPairs >= 1 {
 		return FullHouse
 	}
 
-	if checkForThreeOfAKind(groupedCards) {
+	if numberOfTripples >= 1 {
 		return ThreeOfAKind
 	}
 
-	if checkForPairs(groupedCards, 2) {
+	if numberOfPairs >= 2 {
 		return TwoPair
 	}
 
-	if checkForPairs(groupedCards, 1) {
+	if numberOfPairs >= 1 {
 		return OnePair
 	}
 
 	return HighCard
 }
 
-func checkForFiveOfAKind(groupedCards map[string]int) bool {
-	return len(groupedCards) == 1
-}
+func getNumberOfEachCard(cards [13]int, expectedNumber int) int {
+	var result int
+	for _, card := range cards {
+		if card == expectedNumber {
+			result += 1
 
-func checkForFourOfAKind(groupedCards map[string]int) bool {
-	if len(groupedCards) != 2 {
-		return false
-	}
-
-	for _, value := range groupedCards {
-		if value == 4 {
-			return true
 		}
 	}
-
-	return false
-}
-
-func checkForFullHouse(groupedCards map[string]int) bool {
-	if len(groupedCards) != 2 {
-		return false
-	}
-
-	hasThree := false
-	hasTwo := false
-	for _, value := range groupedCards {
-		if value == 3 {
-			hasThree = true
-			continue
-		}
-
-		if value == 2 {
-			hasTwo = true
-		}
-	}
-
-	return hasThree && hasTwo
-}
-
-func checkForThreeOfAKind(groupedCards map[string]int) bool {
-	numberOfThrees := 0
-	for _, value := range groupedCards {
-		if value == 3 {
-			numberOfThrees += 1
-		}
-	}
-
-	return numberOfThrees == 1
-}
-
-func checkForPairs(groupedCards map[string]int, expectedNumberOfPairs int) bool {
-	numberOfPairs := 0
-	for _, value := range groupedCards {
-		if value == 2 {
-			numberOfPairs += 1
-		}
-	}
-
-	return numberOfPairs == expectedNumberOfPairs
+	return result
 }

@@ -18,30 +18,23 @@ const (
 	HighCard     TypeOfHandEnum = 6
 )
 
-// five cards per hand
-// [highest] A K Q J T 9 8 7 6 5 4 3 2 [lowest]
-
-// types of hand [highest to lowest?]:
-// 5 of a kind 5x
-// 4 of a kind 4x
-// full house 3x + 2x
-// 3 of a kind 3x
-// 2 pair 2x + 2x + 1x
-// 1 pair 2x + 1x + 1x + 1x
-// high card all labels are distinct
-
-// two hand have the same type:
-// compare each card from start to finish of each hand and the higher card wins => same card move one forward
-
-// winning card wins: bid * rank
-// rank is index in all number of hands
+var debugCategories = [7]string{
+	"FiveOfAKind",
+	"FourOfAKind",
+	"FullHouse",
+	"ThreeOfAKind",
+	"TwoPair",
+	"OnePair",
+	"HighCard",
+}
+var shouldUseDefaultJoker = false
 
 func main() {
 	input := getInput("puzzleInput.txt")
 	handsGroupedByType := getHandsGroupedByType(input)
 	rankedHands := rankHands(handsGroupedByType)
 	totalsOfWinnings := getTotalOfWinnings(rankedHands, len(input))
-	fmt.Printf("%v", totalsOfWinnings)
+	fmt.Printf("Total winnings: %v", totalsOfWinnings)
 }
 
 func rankHands(handsGroupedByType [][]Hand) [][]Hand {
@@ -57,42 +50,27 @@ func rankHands(handsGroupedByType [][]Hand) [][]Hand {
 func sortHandsOfTypeViaBubbleSort(hands []Hand) []Hand {
 	sortedHands := hands
 	slices.SortFunc(sortedHands, func(firstHand, secondHand Hand) int {
-		result := 0
 		for k := 0; k < len(firstHand.cardsAsStrength); k += 1 {
 			firstHandCard := firstHand.cardsAsStrength[k]
 			secondHandCard := secondHand.cardsAsStrength[k]
-			if firstHandCard != secondHandCard {
-				result = firstHandCard - secondHandCard
-				break
+
+			if firstHandCard == secondHandCard {
+				continue
+			}
+
+			if firstHandCard > secondHandCard {
+				return -1
+			}
+
+			if firstHandCard < secondHandCard {
+				return 1
 			}
 
 		}
-		return result
+		return 0
 	})
 
 	return sortedHands
-}
-
-func getHigherHand(firstHand Hand, secondHand Hand) int {
-	for i, firstHandCard := range firstHand.cardsAsStrength {
-		secondHandCard := secondHand.cardsAsStrength[i]
-		if firstHandCard == secondHandCard {
-			continue
-		}
-
-		compareResult := firstHandCard - secondHandCard
-
-		if compareResult < 0 {
-			return -1
-		}
-
-		if compareResult > 0 {
-			return 1
-		}
-
-	}
-
-	return 0
 }
 
 func getTotalOfWinnings(handsGrouped [][]Hand, totalNumberOfHands int) int {
@@ -100,10 +78,11 @@ func getTotalOfWinnings(handsGrouped [][]Hand, totalNumberOfHands int) int {
 	total := 0
 	currentRank := totalNumberOfHands
 
-	for _, handGroup := range handsGrouped {
+	for i, handGroup := range handsGrouped {
+		fmt.Printf("handGroup %v\n", debugCategories[i])
 		for _, hand := range handGroup {
 			product := hand.bid * currentRank
-			fmt.Printf("%v * %v = %v\n", hand.bid, currentRank, product)
+			fmt.Printf("Rank: '%v' cards: '%v', bid: '%v'\n", currentRank, hand.cardsAsStrength, hand.bid)
 			total += product
 			currentRank -= 1
 		}
