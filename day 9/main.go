@@ -9,12 +9,11 @@ import (
 )
 
 func main() {
-	// TODO DEBUG
 	input := getInput("puzzleInput.txt")
 	extrapolatedSequences := getExtrapolateSequenceForEachInput(input)
-	for _, extrapolatedSequence := range extrapolatedSequences {
-		fmt.Printf("The extrapolated values are: %v\n", extrapolatedSequence)
-	}
+	//for _, extrapolatedSequence := range extrapolatedSequences {
+	//fmt.Printf("The extrapolated values are: %v\n", extrapolatedSequence)
+	//}
 	sumOfExtrapolatedSequences := getSumOfExtrapolatedSequences(extrapolatedSequences)
 	fmt.Printf("The sum of the extrapolated sequences is: %v\n", sumOfExtrapolatedSequences)
 }
@@ -27,7 +26,7 @@ func getExtrapolateSequenceForEachInput(input []string) [][]int {
 		sequences := generateSequencesBasedOnStartingSequence(currentNumbers)
 		fmt.Printf("The sequences are: %v\n", sequences)
 		extrapolatedValues := extrapolateSequence(sequences)
-		//fmt.Printf("The extrapolated values are: %v\n", extrapolatedValues)
+		fmt.Printf("The extrapolated values are: %v\n", extrapolatedValues)
 		extrapolatedSequences[i] = extrapolatedValues
 	}
 
@@ -35,7 +34,7 @@ func getExtrapolateSequenceForEachInput(input []string) [][]int {
 }
 
 func transformLineToIntArray(line string) []int {
-	numberRegexp := regexp.MustCompile(`\d+`)
+	numberRegexp := regexp.MustCompile(`-?\d+`)
 	numbersAsStrings := numberRegexp.FindAllString(line, -1)
 	parsedNumbers := make([]int, len(numbersAsStrings))
 
@@ -85,9 +84,7 @@ func getSubsequence(parentSequence []int) []int {
 		difference := nextNumber - currentNumber
 		newSubsequence = append(newSubsequence, difference)
 	}
-	// This function returns the next subsequence
-	// This function returns the next subsequence
-	// This function returns the next subsequence
+
 	return newSubsequence
 }
 
