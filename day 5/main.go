@@ -23,56 +23,57 @@ var startingSource = "seed"
 var endingDestination = "location"
 var rangesMap = RangesMap{}
 
+const numberOfElementsPerBatch = 4
+
 func main() {
 	input := getInput("puzzleInput.txt")
-	seeds := getNumbersFromString(input[0])
+	isPartTwo := true
+	seedRanges := getSeedRanges(input[0], isPartTwo)
 	rangesMap = getRangeMap(input[1:])
-	locations := mapSeedsToLocation(seeds)
-	fmt.Printf("locations: %#v\n", locations)
-	lowestLocations := getLowestLocationFromLocations(locations)
+	lowestLocations := mapSeedsToLocation(seedRanges)
 	fmt.Printf("--lowestLocations: %#v\n", lowestLocations)
 }
 
-func mapSeedsToLocation(seeds []int) []int {
-	mappings := make([]int, 0)
+func mapSeedsToLocation(seedRanges [][2]int) int {
+	var mutex = &sync.Mutex{}
+	result := 0
+	semaphore := make(chan struct{}, numberOfElementsPerBatch)
+	var wg sync.WaitGroup
 
-	var waitGroup sync.WaitGroup
-	resultChannel := make(chan int)
-	for _, seed := range seeds {
-		waitGroup.Add(1)
-		go func(s int) {
-			defer waitGroup.Done()
-			getLocationForSeed(s, resultChannel)
-		}(seed)
+	for _, currentRange := range seedRanges {
+		for i := currentRange[0]; i < currentRange[1]; i += 1 {
+			wg.Add(1)
+			go func(currentIndex int) {
+				defer wg.Done()
+				semaphore <- struct{}{}
+				currentLocation := getLocationForSeed(currentIndex)
+				mutex.Lock()
+				if result == 0 || result > currentLocation {
+					result = currentLocation
+				}
+				mutex.Unlock()
+				<-semaphore
+			}(i)
+		}
 	}
 
-	go func() {
-		waitGroup.Wait()
-		close(resultChannel)
-	}()
-
-	for result := range resultChannel {
-		mappings = append(mappings, result)
-	}
-
-	return mappings
+	wg.Wait()
+	return result
 }
 
-func getLocationForSeed(seed int, resultChannel chan int) {
+func getLocationForSeed(seed int) int {
 	location := mapSeedToSoil(seed, startingSource)
 	if location == -1 {
 		location = seed
 	}
-	resultChannel <- location
+	return location
 }
 
 func mapSeedToSoil(seed int, sourceString string) int {
-
 	currentMapName := sourceString
 	resultSource := seed
 	for currentMapName != "" && currentMapName != endingDestination {
 		c, m := getDestinationOfSeed(resultSource, rangesMap[currentMapName])
-		//fmt.Printf("c: %d, m: %s\n", c, m)
 		if m == "" {
 			break
 		}
@@ -83,9 +84,17 @@ func mapSeedToSoil(seed int, sourceString string) int {
 }
 
 func getDestinationOfSeed(source int, rangeItem RangeMapItem) (newSource int, newMapName string) {
+	if source < rangeItem.ranges[0].sourceRangeStart { // requires that the ranges are sorted
+		return source, rangeItem.destinationString
+	}
+
 	for _, r := range rangeItem.ranges {
-		isInInterval := isValueInInterval(source, r.sourceRangeStart, r.rangeLength)
-		if isInInterval == false {
+		if source < r.sourceRangeStart {
+			continue
+		}
+
+		intervalEnd := r.sourceRangeStart + r.rangeLength - 1
+		if source > intervalEnd {
 			continue
 		}
 
@@ -106,9 +115,4 @@ func getLowestLocationFromLocations(locations []int) int {
 	}
 
 	return lowestLocation
-}
-
-func isValueInInterval(valueToFind int, intervalStart int, intervalLength int) bool {
-	intervalEnd := intervalStart + intervalLength - 1
-	return valueToFind >= intervalStart && valueToFind <= intervalEnd
 }
