@@ -16,8 +16,8 @@ func getSpace(input []string) [][]string {
 	return space
 }
 
-func getEmptyRows(space [][]string) []int {
-	emptyRows := make([]int, 0)
+func getEmptyRows(space [][]string) []int64 {
+	emptyRows := make([]int64, 0)
 
 	for rowIndex, row := range space {
 		doesRowContainGalaxy := false
@@ -28,15 +28,15 @@ func getEmptyRows(space [][]string) []int {
 		}
 
 		if doesRowContainGalaxy == false {
-			emptyRows = append(emptyRows, rowIndex)
+			emptyRows = append(emptyRows, int64(rowIndex))
 		}
 	}
 
 	return emptyRows
 }
 
-func getEmptyCols(space [][]string) []int {
-	emptyCols := make([]int, 0)
+func getEmptyCols(space [][]string) []int64 {
+	emptyCols := make([]int64, 0)
 
 	for colIndex := 0; colIndex < len(space[0]); colIndex += 1 {
 		doesColContainsGalaxy := false
@@ -52,7 +52,7 @@ func getEmptyCols(space [][]string) []int {
 			continue
 		}
 
-		emptyCols = append(emptyCols, colIndex)
+		emptyCols = append(emptyCols, int64(colIndex))
 	}
 
 	return emptyCols

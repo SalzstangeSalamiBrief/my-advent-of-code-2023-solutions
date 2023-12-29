@@ -1,6 +1,20 @@
 # Visual examples
 
 ## Example input
+Galaxies
+
+| i | row |col| empty row | empty col |
+|---|-----|---|-----------|-----------|
+| 0 | 0   |3| 0         | 1         |
+| 1 | 1   |7| 0         | 2         |
+| 2 | 2   |0| 0         | 0         |
+| 3 | 4   |7| 1         | 2         |
+| 4 | 5   |1| 1         | 0         |
+| 5 | 6   |9| 1         | 3         |
+| 6 | 8   |7| 2         | 2         |
+| 7 | 9   |0| 2         | 0         |
+| 8 | 9   |4| 2         | 1         |
+
 
 | - | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
 |---|---|---|---|---|---|---|---|---|---|---|
@@ -19,7 +33,7 @@
 - Distance between (0, 3) and (2, 0) = 5 
 - Distance between (0, 3) and (6, 9) = 12
 
-## Expanded example input
+## Expanded example input with n = 1
 
 | -  | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 |
 |----|---|---|---|---|---|---|---|---|---|---|----|----|----|
@@ -39,3 +53,11 @@
 - Distance between (0, 4) and (1, 9) = 6
 - Distance between (0, 4) and (2, 0) = 6
 - Distance between (0, 4) and (7, 12) = 15
+
+## Expanded example input with n = 10
+(0, 3) => (0, 13)
+(1, 7) => (1, 27)
+(2, 0) => (2, 0)
+(6, 9) => (16, 49)
+
+- Distance between (0, 13) and (1, 27) = 14 

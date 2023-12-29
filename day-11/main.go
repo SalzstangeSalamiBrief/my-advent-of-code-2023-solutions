@@ -2,32 +2,26 @@ package main
 
 import (
 	"fmt"
+	"math"
 )
 
 type Galaxy struct {
-	row int
-	col int
+	row int64
+	col int64
 }
 
 func main() {
-
-	input := getInput("exampleInput.txt")
+	input := getInput("puzzleInput.txt")
 	space := getSpace(input)
 	emptyRows := getEmptyRows(space)
 	emptyCols := getEmptyCols(space)
-	galaxies := getGalaxies(space)
-	for _, galaxy := range galaxies {
-		fmt.Printf("%v\n", galaxy)
-	}
-	distances := getDistancesBetweenGalaxies(galaxies, emptyRows, emptyCols, 1)
-	for _, row := range distances {
-		fmt.Printf("%v\n", row)
-	}
+	galaxies := getGalaxies(space, emptyRows, emptyCols, 1000000)
+	distances := getDistancesBetweenGalaxies(galaxies)
 	sumOfDistances := getSumOfAllDistances(distances)
 	fmt.Printf("sum of distances: %v\n", sumOfDistances)
 }
 
-func getGalaxies(space [][]string) []Galaxy {
+func getGalaxies(space [][]string, emptyRows []int64, emptyCols []int64, valueOfEmptyElement int64) []Galaxy {
 	galaxies := make([]Galaxy, 0)
 
 	for i, row := range space {
@@ -36,9 +30,13 @@ func getGalaxies(space [][]string) []Galaxy {
 				continue
 			}
 
+			numberOfEmptyRowsBetweenStartAndSpace := getNumberOfEmptyElementsBetweenStartAndEnd(0, int64(i), emptyRows)
+			rowsToAdd := numberOfEmptyRowsBetweenStartAndSpace * (valueOfEmptyElement - 1) // remove one to not count the same row twice
+			numberOfEmptyColsBetweenStartAndSpace := getNumberOfEmptyElementsBetweenStartAndEnd(0, int64(j), emptyCols)
+			colsToAdd := numberOfEmptyColsBetweenStartAndSpace * (valueOfEmptyElement - 1) // remove one to not count the same col twice
 			newGalaxy := Galaxy{
-				row: i,
-				col: j,
+				row: int64(i) + rowsToAdd,
+				col: int64(j) + colsToAdd,
 			}
 
 			galaxies = append(galaxies, newGalaxy)
@@ -48,33 +46,13 @@ func getGalaxies(space [][]string) []Galaxy {
 	return galaxies
 }
 
-func getDistancesBetweenGalaxies(galaxies []Galaxy, emptyRows []int, emptyCols []int, valueOfEmptyElement int) [][]int {
-	distances := make([][]int, len(galaxies)-1)
+func getDistancesBetweenGalaxies(galaxies []Galaxy) [][]int64 {
+	distances := make([][]int64, len(galaxies)-1)
 
 	for i := 0; i < len(galaxies)-1; i += 1 {
-		distances[i] = make([]int, 0)
+		distances[i] = make([]int64, 0)
 		for j := i + 1; j < len(galaxies); j += 1 {
-			// TODO CALUCLATIOn
-			// TODO BEFORE CALCULATING THE DIFFERENCE ADD NUMBER OF EMPTY ROWS/COLS TO TARGET
-			startGalaxy := galaxies[i]
-			endGalaxy := galaxies[j]
-
-			isColOfEndBeforeColOfStart := startGalaxy.col > endGalaxy.col
-			if isColOfEndBeforeColOfStart {
-				startGalaxy = galaxies[j]
-				endGalaxy = galaxies[i]
-			}
-
-			numberOfEmptyColsBetween := getNumberOfEmptyElementsBetweenStartAndEnd(startGalaxy.col, endGalaxy.col, emptyCols)
-			numberOfExpandedEmptyCols := numberOfEmptyColsBetween * valueOfEmptyElement
-			numberOfEmptyRowsBetween := getNumberOfEmptyElementsBetweenStartAndEnd(startGalaxy.row, endGalaxy.row, emptyRows)
-			numberOfExpandedEmptyRows := numberOfEmptyRowsBetween * valueOfEmptyElement
-
-			rowDistance := getDifferenceBetweenTwoNumbers(startGalaxy.row, endGalaxy.row+numberOfExpandedEmptyRows)
-			colDistance := getDifferenceBetweenTwoNumbers(startGalaxy.col, endGalaxy.col+numberOfExpandedEmptyCols)
-
-			distance := rowDistance + colDistance
-			fmt.Printf("i: %v; j: %v; distance %v\n", i, j, distance)
+			distance := getManhattenDistance(galaxies[i], galaxies[j])
 			distances[i] = append(distances[i], distance)
 		}
 	}
@@ -82,7 +60,7 @@ func getDistancesBetweenGalaxies(galaxies []Galaxy, emptyRows []int, emptyCols [
 	return distances
 }
 
-func getNumberOfEmptyElementsBetweenStartAndEnd(start int, end int, emptyElements []int) int {
+func getNumberOfEmptyElementsBetweenStartAndEnd(start int64, end int64, emptyElements []int64) int64 {
 	startElement := start
 	endElement := end
 	if start > end {
@@ -90,7 +68,7 @@ func getNumberOfEmptyElementsBetweenStartAndEnd(start int, end int, emptyElement
 		endElement = start
 	}
 
-	numberOfEmptyElements := 0
+	var numberOfEmptyElements int64
 
 	for _, emptyElement := range emptyElements {
 		if emptyElement > startElement && emptyElement < endElement {
@@ -101,16 +79,8 @@ func getNumberOfEmptyElementsBetweenStartAndEnd(start int, end int, emptyElement
 	return numberOfEmptyElements
 }
 
-func getDifferenceBetweenTwoNumbers(firstNumber int, secondNumber int) int {
-	if firstNumber > secondNumber {
-		return firstNumber - secondNumber
-	}
-
-	return secondNumber - firstNumber
-}
-
-func getSumOfAllDistances(distances [][]int) int {
-	sum := 0
+func getSumOfAllDistances(distances [][]int64) int64 {
+	var sum int64
 
 	for _, row := range distances {
 		for _, distance := range row {
@@ -119,4 +89,11 @@ func getSumOfAllDistances(distances [][]int) int {
 	}
 
 	return sum
+}
+
+func getManhattenDistance(firstGalaxy Galaxy, secondGalaxy Galaxy) int64 {
+	colDifference := float64(firstGalaxy.col - secondGalaxy.col)
+	rowDifference := float64(firstGalaxy.row - secondGalaxy.row)
+	distance := math.Abs(rowDifference) + math.Abs(colDifference)
+	return int64(distance)
 }
